@@ -60,10 +60,331 @@ class AppShell extends StatefulWidget {final ValueChanged<ThemeMode> onTheme;con
 class _AppShellState extends State<AppShell>{int index=0;final data=PrayerData();@override void initState(){super.initState();data.restore().then((_)=>data.load());}@override void dispose(){data.dispose();super.dispose();}
  @override Widget build(BuildContext context){final pages=[HomeScreen(onOpen:(i)=>setState(()=>index=i),d:data),TimesScreen(d:data),QuranScreen(),DiscoverScreen(d:data),SettingsScreen(d:data,onTheme:widget.onTheme)];return Scaffold(body:SafeArea(child:IndexedStack(index:index,children:pages)),bottomNavigationBar:NavigationBar(selectedIndex:index,onDestinationSelected:(v)=>setState(()=>index=v),destinations:const[NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'Ana Sayfa'),NavigationDestination(icon:Icon(Icons.schedule_outlined),label:'Vakitler'),NavigationDestination(icon:Icon(Icons.menu_book_outlined),label:'Kur’an'),NavigationDestination(icon:Icon(Icons.grid_view_rounded),label:'Keşfet'),NavigationDestination(icon:Icon(Icons.settings_outlined),label:'Ayarlar')]));}}
 
-class HomeScreen extends StatefulWidget{final PrayerData d;final ValueChanged<int> onOpen;const HomeScreen({super.key,required this.d,required this.onOpen});@override State<HomeScreen> createState()=>_HomeScreenState();}
-class _HomeScreenState extends State<HomeScreen>{Timer? timer;DateTime now=DateTime.now();@override void initState(){super.initState();timer=Timer.periodic(const Duration(seconds:1),(_){if(mounted)setState(()=>now=DateTime.now());});}@override void dispose(){timer?.cancel();super.dispose();}
- MapEntry<String,String>? get next{for(final e in widget.d.timings.entries){if(e.key=='Güneş')continue;final p=e.value.split(':');if(DateTime(now.year,now.month,now.day,int.parse(p[0]),int.parse(p[1])).isAfter(now))return e;}return widget.d.timings.isEmpty?null:MapEntry('İmsak',widget.d.timings['İmsak']!);} String get left{final e=next;if(e==null)return'--:--:--';final p=e.value.split(':');var t=DateTime(now.year,now.month,now.day,int.parse(p[0]),int.parse(p[1]));if(!t.isAfter(now))t=t.add(const Duration(days:1));final x=t.difference(now);return'${x.inHours.toString().padLeft(2,'0')}:${(x.inMinutes%60).toString().padLeft(2,'0')}:${(x.inSeconds%60).toString().padLeft(2,'0')}';}
- @override Widget build(BuildContext c)=>AnimatedBuilder(animation:widget.d,builder:(c,_)=>(RefreshIndicator(onRefresh:widget.d.load,child:ListView(padding:const EdgeInsets.fromLTRB(18,18,18,28),children:[Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const SalahBrandHeader(),const SizedBox(height:14),Row(children:[const CircleAvatar(radius:22,backgroundColor:brand,child:Icon(Icons.mosque,color:Colors.white)),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('Selamün Aleyküm',style:TextStyle(fontSize:20,fontWeight:FontWeight.w800)),Text(widget.d.city.isEmpty?'Konum alınıyor…':widget.d.city,maxLines:1,overflow:TextOverflow.ellipsis)])),IconButton(onPressed:widget.d.load,icon:const Icon(Icons.my_location))])]),const SizedBox(height:16),PrayerHero(title:next?.key??'Sonraki Namaz',time:next?.value??'--:--',left:left,hijri:widget.d.hijri),const SizedBox(height:16),SizedBox(height:96,child:ListView(scrollDirection:Axis.horizontal,children:widget.d.timings.entries.map((e)=>Container(width:92,margin:const EdgeInsets.only(right:9),padding:const EdgeInsets.all(12),decoration:BoxDecoration(color:Theme.of(c).cardColor,borderRadius:BorderRadius.circular(20)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Icon(e.key=='Güneş'?Icons.wb_sunny_outlined:Icons.access_time_rounded,color:e.key==next?.key?gold:null),const SizedBox(height:6),Text(e.key,style:const TextStyle(fontSize:12)),Text(e.value,style:const TextStyle(fontWeight:FontWeight.w800))]))).toList())),const SizedBox(height:22),const SectionTitle('Hızlı Erişim'),const SizedBox(height:10),GridView.count(crossAxisCount:4,shrinkWrap:true,physics:const NeverScrollableScrollPhysics(),mainAxisSpacing:10,crossAxisSpacing:10,children:[Quick(icon:Icons.explore,label:'Kıble',onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>QiblaScreen(d:widget.d)))),Quick(icon:Icons.menu_book,label:'Kur’an',onTap:()=>widget.onOpen(2)),Quick(icon:Icons.auto_stories,label:'Hadis',onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const HadithScreen()))),Quick(icon:Icons.radio_button_checked,label:'Zikir',onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const TasbihScreen())))]),const SizedBox(height:22),InkWell(borderRadius:BorderRadius.circular(24),onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>RamadanScreen(d:widget.d))),child:Container(padding:const EdgeInsets.all(20),decoration:BoxDecoration(borderRadius:BorderRadius.circular(24),gradient:const LinearGradient(colors:[Color(0xFF112E29),Color(0xFF0B6B5C)])),child:const Row(children:[CircleAvatar(backgroundColor:Colors.white12,child:Icon(Icons.nights_stay,color:gold)),SizedBox(width:14),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Ramazan',style:TextStyle(color:Colors.white,fontSize:19,fontWeight:FontWeight.w800)),Text('İmsak • İftar • 30 günlük takvim',style:TextStyle(color:Colors.white70))])),Icon(Icons.chevron_right,color:Colors.white)]))),const SizedBox(height:22),const SectionTitle('Günün Ayeti'),const SizedBox(height:10),const InfoCard(icon:Icons.format_quote,title:'Bakara 2:286',body:'Allah hiç kimseye gücünün yeteceğinden fazlasını yüklemez.'),const SizedBox(height:12),const SectionTitle('Günün Hadisi'),const SizedBox(height:10),const InfoCard(icon:Icons.auto_stories,title:'Niyet',body:'Ameller niyetlere göredir. Kaynak bilgisi hadis ekranında gösterilir.')])));}
+class HomeScreen extends StatefulWidget {
+  final PrayerData d;
+  final ValueChanged<int> onOpen;
+
+  const HomeScreen({
+    super.key,
+    required this.d,
+    required this.onOpen,
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Timer? timer;
+  DateTime now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() => now = DateTime.now());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  MapEntry<String, String>? get next {
+    for (final e in widget.d.timings.entries) {
+      if (e.key == 'Güneş') continue;
+
+      final parts = e.value.split(':');
+      final prayerTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+
+      if (prayerTime.isAfter(now)) {
+        return e;
+      }
+    }
+
+    if (widget.d.timings.isEmpty) return null;
+
+    return MapEntry(
+      'İmsak',
+      widget.d.timings['İmsak']!,
+    );
+  }
+
+  String get left {
+    final e = next;
+    if (e == null) return '--:--:--';
+
+    final parts = e.value.split(':');
+
+    var target = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+    );
+
+    if (!target.isAfter(now)) {
+      target = target.add(const Duration(days: 1));
+    }
+
+    final diff = target.difference(now);
+
+    return '${diff.inHours.toString().padLeft(2, '0')}:'
+        '${(diff.inMinutes % 60).toString().padLeft(2, '0')}:'
+        '${(diff.inSeconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.d,
+      builder: (context, _) {
+        return RefreshIndicator(
+          onRefresh: widget.d.load,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+            children: [
+              const SalahBrandHeader(),
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 22,
+                    backgroundColor: brand,
+                    child: Icon(
+                      Icons.mosque,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Selamün Aleyküm',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          widget.d.city.isEmpty
+                              ? 'Konum alınıyor…'
+                              : widget.d.city,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: widget.d.load,
+                    icon: const Icon(Icons.my_location),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              PrayerHero(
+                title: next?.key ?? 'Sonraki Namaz',
+                time: next?.value ?? '--:--',
+                left: left,
+                hijri: widget.d.hijri,
+              ),
+
+              const SizedBox(height: 16),
+
+              SizedBox(
+                height: 96,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: widget.d.timings.entries.map((e) {
+                    return Container(
+                      width: 92,
+                      margin: const EdgeInsets.only(right: 9),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            e.key == 'Güneş'
+                                ? Icons.wb_sunny_outlined
+                                : Icons.access_time_rounded,
+                            color: e.key == next?.key ? gold : null,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            e.key,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            e.value,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              const SizedBox(height: 22),
+              const SectionTitle('Hızlı Erişim'),
+              const SizedBox(height: 10),
+
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                children: [
+                  Quick(
+                    icon: Icons.explore,
+                    label: 'Kıble',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => QiblaScreen(d: widget.d),
+                      ),
+                    ),
+                  ),
+                  Quick(
+                    icon: Icons.menu_book,
+                    label: 'Kur’an',
+                    onTap: () => widget.onOpen(2),
+                  ),
+                  Quick(
+                    icon: Icons.auto_stories,
+                    label: 'Hadis',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HadithScreen(),
+                      ),
+                    ),
+                  ),
+                  Quick(
+                    icon: Icons.radio_button_checked,
+                    label: 'Zikir',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TasbihScreen(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 22),
+
+              InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RamadanScreen(d: widget.d),
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF112E29),
+                        Color(0xFF0B6B5C),
+                      ],
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.white12,
+                        child: Icon(
+                          Icons.nights_stay,
+                          color: gold,
+                        ),
+                      ),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ramazan',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              'İmsak • İftar • 30 günlük takvim',
+                              style: TextStyle(
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 22),
+              const SectionTitle('Günün Ayeti'),
+              const SizedBox(height: 10),
+
+              const InfoCard(
+                icon: Icons.format_quote,
+                title: 'Bakara 2:286',
+                body:
+                    'Allah hiç kimseye gücünün yeteceğinden fazlasını yüklemez.',
+              ),
+
+              const SizedBox(height: 12),
+              const SectionTitle('Günün Hadisi'),
+              const SizedBox(height: 10),
+
+              const InfoCard(
+                icon: Icons.auto_stories,
+                title: 'Niyet',
+                body:
+                    'Ameller niyetlere göredir. Kaynak bilgisi hadis ekranında gösterilir.',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 class PrayerHero extends StatelessWidget{final String title,time,left,hijri;const PrayerHero({super.key,required this.title,required this.time,required this.left,required this.hijri});@override Widget build(BuildContext c)=>Container(height:230,padding:const EdgeInsets.all(24),decoration:BoxDecoration(borderRadius:BorderRadius.circular(30),gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFF0A3B34),Color(0xFF0B6B5C),Color(0xFF15977F)])),child:Stack(children:[Positioned(right:-8,bottom:-14,child:Icon(Icons.mosque,size:150,color:Colors.white.withOpacity(.10))),Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(DateFormat('dd MMMM yyyy','tr').format(DateTime.now()),style:const TextStyle(color:Colors.white70)),if(hijri.isNotEmpty)Text(hijri,style:const TextStyle(color:Colors.white70)),const Spacer(),Text('$title • $time',style:const TextStyle(color:Colors.white,fontSize:24,fontWeight:FontWeight.w800)),Text(left,style:const TextStyle(color:Colors.white,fontSize:42,fontWeight:FontWeight.w300)),const Text('kaldı',style:TextStyle(color:Colors.white70))])])) ;}
@@ -90,7 +411,81 @@ class AlQuranCloudService{static const api='https://api.alquran.cloud/v1';static
 
 class SalahBrandHeader extends StatelessWidget{const SalahBrandHeader({super.key});@override Widget build(BuildContext c)=>Row(children:[Container(width:38,height:38,decoration:BoxDecoration(color:brand,borderRadius:BorderRadius.circular(12)),child:const Icon(Icons.mosque,color:Colors.white,size:22)),const SizedBox(width:10),const Text('Salah',style:TextStyle(fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.6)),const Spacer(),Text('Prayer • Quran',style:Theme.of(c).textTheme.labelMedium)]);}
 
-class DonationScreen extends StatelessWidget{const DonationScreen({super.key});@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Salah • Bağış')),body:ListView(padding:const EdgeInsets.all(20),children:[const Icon(Icons.volunteer_activism,size:72,color:brand),const SizedBox(height:16),const Text('Salah’ı destekle',textAlign:TextAlign.center,style:TextStyle(fontSize:26,fontWeight:FontWeight.w900)),const SizedBox(height:10),const Text('Kur’an dinleme ve temel ibadet özellikleri bağış yapmadan kullanılabilir. Bağışlar uygulamanın geliştirilmesi ve servis giderleri için isteğe bağlı destek olarak sunulacaktır.',textAlign:TextAlign.center),const SizedBox(height:20),Card(child:Padding(padding:const EdgeInsets.all(18),child:Column(children:[const ListTile(contentPadding:EdgeInsets.zero,leading:Icon(Icons.lock_outline),title:Text('Güvenli ödeme'),subtitle:Text('Ödeme bilgileri Salah içinde saklanmayacak.')),const Divider(),const ListTile(contentPadding:EdgeInsets.zero,leading:Icon(Icons.info_outline),title:Text('Ödeme sağlayıcısı bekleniyor'),subtitle:Text('Google Play / App Store kurallarına uygun sağlayıcı seçildiğinde bu buton aktif edilecek.')),const SizedBox(height:8),SizedBox(width:double.infinity,child:FilledButton.icon(onPressed:null,icon:const Icon(Icons.favorite),label:const Text('Bağış sistemi yakında')))]))]));}
+class DonationScreen extends StatelessWidget {
+  const DonationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Salah • Bağış'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Icon(
+            Icons.volunteer_activism,
+            size: 72,
+            color: brand,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Salah’ı destekle',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Kur’an dinleme ve temel ibadet özellikleri bağış yapmadan '
+            'kullanılabilir. Bağışlar uygulamanın geliştirilmesi ve servis '
+            'giderleri için isteğe bağlı destek olarak sunulacaktır.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.lock_outline),
+                    title: Text('Güvenli ödeme'),
+                    subtitle: Text(
+                      'Ödeme bilgileri Salah içinde saklanmayacak.',
+                    ),
+                  ),
+                  const Divider(),
+                  const ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.info_outline),
+                    title: Text('Ödeme sağlayıcısı bekleniyor'),
+                    subtitle: Text(
+                      'Google Play / App Store kurallarına uygun sağlayıcı '
+                      'seçildiğinde bu buton aktif edilecek.',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: null,
+                      icon: const Icon(Icons.favorite),
+                      label: const Text('Bağış sistemi yakında'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HadithScreen extends StatelessWidget{const HadithScreen({super.key});@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Hadis')),body:ListView(padding:const EdgeInsets.all(18),children:const[InfoCard(icon:Icons.auto_stories,title:'Niyet',body:'Ameller niyetlere göredir. — Sahih Buhari, 1'),InfoCard(icon:Icons.favorite_outline,title:'Merhamet',body:'Merhamet etmeyene merhamet olunmaz. — Sahih Buhari / Sahih Müslim'),InfoCard(icon:Icons.handshake_outlined,title:'Kolaylık',body:'Kolaylaştırın, zorlaştırmayın. — Sahih Buhari / Sahih Müslim')]));}
 class TasbihScreen extends StatefulWidget{const TasbihScreen({super.key});@override State<TasbihScreen> createState()=>_TasbihScreenState();}class _TasbihScreenState extends State<TasbihScreen>{int n=0,target=33;@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Zikirmatik')),body:Padding(padding:const EdgeInsets.all(20),child:Column(children:[const SizedBox(height:30),Text('$n / $target',style:const TextStyle(fontSize:54,fontWeight:FontWeight.w300)),const SizedBox(height:12),LinearProgressIndicator(value:(n/target).clamp(0.0,1.0).toDouble()),const Spacer(),SizedBox(width:190,height:190,child:FilledButton(onPressed:()=>setState(()=>n++),style:FilledButton.styleFrom(shape:const CircleBorder()),child:const Icon(Icons.touch_app,size:62))),TextButton(onPressed:()=>setState(()=>n=0),child:const Text('Sıfırla')),const Spacer()]))) ;}
