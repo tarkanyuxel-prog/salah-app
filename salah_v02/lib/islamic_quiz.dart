@@ -21,12 +21,12 @@ class QuizQuestion {
   );
 }
 class IslamicQuizService {
-  static const database='https://raw.githubusercontent.com/rn0x/IslamicQuizAPI/main/database/database.json';
+  static const database='https://github.com/rn0x/IslamicQuizAPI/releases/download/database/database.json';
   Future<List<QuizQuestion>> loadAll()async{
     final r=await http.get(Uri.parse(database)).timeout(const Duration(seconds:30));
     if(r.statusCode!=200)throw Exception('Soru bankası alınamadı');
     final d=jsonDecode(utf8.decode(r.bodyBytes));
-    final List raw=d is List?d:(d is Map&&d['questions'] is List?d['questions']:const[]);
+    final List raw=d is List?d:(d is Map&&d['questions'] is List?d['questions']:const[]);\n    if(raw.isEmpty)throw Exception('Soru bankası boş döndü');
     final rows=raw.whereType<Map>().map((e)=>QuizQuestion.fromJson(Map<String,dynamic>.from(e))).where((q)=>q.question.isNotEmpty&&q.answers.length>=2).toList();
     rows.sort((a,b){final x=a.level.compareTo(b.level);return x!=0?x:a.id.compareTo(b.id);});
     return rows;
