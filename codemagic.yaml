@@ -1,0 +1,28 @@
+workflows:
+  android-release:
+    name: Salah Android APK + AAB
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      java: 17
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd salah_v02
+          flutter pub get
+      - name: Analyze
+        script: |
+          cd salah_v02
+          flutter analyze --no-fatal-infos
+      - name: Build release APK
+        script: |
+          cd salah_v02
+          flutter build apk --release
+      - name: Build release AAB
+        script: |
+          cd salah_v02
+          flutter build appbundle --release
+    artifacts:
+      - salah_v02/build/app/outputs/flutter-apk/*.apk
+      - salah_v02/build/app/outputs/bundle/release/*.aab
+      - salah_v02/build/app/outputs/mapping/release/mapping.txt
