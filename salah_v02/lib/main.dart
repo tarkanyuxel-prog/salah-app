@@ -406,86 +406,10 @@ class _QuranScreenState extends State<QuranScreen>{final api=AlQuranCloudService
 class QuranErrorCard extends StatelessWidget{final String error;final VoidCallback retry;const QuranErrorCard({super.key,required this.error,required this.retry});@override Widget build(BuildContext c)=>Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(children:[const Icon(Icons.wifi_off,size:42,color:gold),const SizedBox(height:10),const Text('Kur’an servisine ulaşılamadı',style:TextStyle(fontSize:18,fontWeight:FontWeight.w800)),const SizedBox(height:8),const Text('Al Quran Cloud bağlantısı için internet erişimini kontrol edin.',textAlign:TextAlign.center),const SizedBox(height:8),Text(error,textAlign:TextAlign.center,style:Theme.of(c).textTheme.bodySmall),const SizedBox(height:12),FilledButton.icon(onPressed:retry,icon:const Icon(Icons.refresh),label:const Text('Tekrar dene'))])));}
 class SurahScreen extends StatefulWidget{final AlQuranCloudService api;final dynamic chapter;const SurahScreen({super.key,required this.api,required this.chapter});@override State<SurahScreen> createState()=>_SurahScreenState();}
 class _SurahScreenState extends State<SurahScreen>{final player=AudioPlayer();late Future<List<Map<String,dynamic>>> future;String reciter='ar.alafasy';int bitrate=128;int? playingAyah;final reciters=const{'ar.alafasy':'Mishary Alafasy','ar.husary':'Mahmoud Al-Husary','ar.minshawi':'Al-Minshawi','ar.sudais':'Abdul Rahman Al-Sudais','ar.shuraim':'Saud Al-Shuraim','ar.abdulbasit':'Abdul Basit'};@override void initState(){super.initState();future=widget.api.verses(widget.chapter['number']);player.playerStateStream.listen((s){if(s.processingState==ProcessingState.completed&&mounted)setState(()=>playingAyah=null);});}@override void dispose(){player.dispose();super.dispose();}Future<void> _playAyah(Map<String,dynamic> v)async{final n=v['globalNumber'] as int;if(playingAyah==n&&player.playing){await player.pause();setState((){});return;}final url=widget.api.ayahAudio(n,reciter,bitrate);await player.setUrl(url);setState(()=>playingAyah=n);await player.play();}Future<void> _playSurah()async{final url=widget.api.surahAudio(widget.chapter['number'],reciter,bitrate);await player.setUrl(url);setState(()=>playingAyah=0);await player.play();}
- @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:Text(widget.chapter['englishName']??'Sure')),body:Column(children:[Padding(padding:const EdgeInsets.fromLTRB(16,8,16,8),child:Card(child:Padding(padding:const EdgeInsets.all(12),child:Column(children:[Row(children:[Expanded(child:DropdownButtonFormField<String>(value:reciter,isExpanded:true,decoration:const InputDecoration(labelText:'Kâri',border:OutlineInputBorder()),items:reciters.entries.map((e)=>DropdownMenuItem(value:e.key,child:Text(e.value,overflow:TextOverflow.ellipsis))).toList(),onChanged:(v){if(v!=null)setState(()=>reciter=v);})),const SizedBox(width:10),FilledButton.icon(onPressed:_playSurah,icon:const Icon(Icons.play_arrow),label:const Text('Sureyi dinle'))]),const SizedBox(height:8),Row(children:[Expanded(child:OutlinedButton.icon(onPressed:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>const DonationScreen())),icon:const Icon(Icons.volunteer_activism),label:const Text('Bağış Yap')))]),const SizedBox(height:8),StreamBuilder<Duration>(stream:player.positionStream,builder:(c,s)=>LinearProgressIndicator(value:player.duration==null||player.duration!.inMilliseconds==0?0:(s.data??Duration.zero).inMilliseconds/player.duration!.inMilliseconds))])))),Expanded(child:FutureBuilder<List<Map<String,dynamic>>>(future:future,builder:(c,s){if(!s.hasData){if(s.hasError)return Center(child:Text('${s.error}'));return const Center(child:CircularProgressIndicator());}return ListView.builder(padding:const EdgeInsets.fromLTRB(16,4,16,20),itemCount:s.data!.length,itemBuilder:(c,i){final v=s.data![i],active=playingAyah==v['globalNumber'];return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[CircleAvatar(radius:17,child:Text('${v['numberInSurah']}')),const Spacer(),IconButton(onPressed:()=>_playAyah(v),icon:Icon(active&&player.playing?Icons.pause_circle_filled:Icons.play_circle_fill,color:brand,size:36))]),Text(v['arabic']??'',textDirection:ui.TextDirection.rtl,textAlign:TextAlign.right,style:const TextStyle(fontSize:27,height:1.8)),const Divider(),Text(v['translation']??'',style:const TextStyle(height:1.5))])));});}))]));}
+ @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:Text(widget.chapter['englishName']??'Sure')),body:Column(children:[Padding(padding:const EdgeInsets.fromLTRB(16,8,16,8),child:Card(child:Padding(padding:const EdgeInsets.all(12),child:Column(children:[Row(children:[Expanded(child:DropdownButtonFormField<String>(value:reciter,isExpanded:true,decoration:const InputDecoration(labelText:'Kâri',border:OutlineInputBorder()),items:reciters.entries.map((e)=>DropdownMenuItem(value:e.key,child:Text(e.value,overflow:TextOverflow.ellipsis))).toList(),onChanged:(v){if(v!=null)setState(()=>reciter=v);})),const SizedBox(width:10),FilledButton.icon(onPressed:_playSurah,icon:const Icon(Icons.play_arrow),label:const Text('Sureyi dinle'))]),const SizedBox(height:8),StreamBuilder<Duration>(stream:player.positionStream,builder:(c,s)=>LinearProgressIndicator(value:player.duration==null||player.duration!.inMilliseconds==0?0:(s.data??Duration.zero).inMilliseconds/player.duration!.inMilliseconds))])))),Expanded(child:FutureBuilder<List<Map<String,dynamic>>>(future:future,builder:(c,s){if(!s.hasData){if(s.hasError)return Center(child:Text('${s.error}'));return const Center(child:CircularProgressIndicator());}return ListView.builder(padding:const EdgeInsets.fromLTRB(16,4,16,20),itemCount:s.data!.length,itemBuilder:(c,i){final v=s.data![i],active=playingAyah==v['globalNumber'];return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[CircleAvatar(radius:17,child:Text('${v['numberInSurah']}')),const Spacer(),IconButton(onPressed:()=>_playAyah(v),icon:Icon(active&&player.playing?Icons.pause_circle_filled:Icons.play_circle_fill,color:brand,size:36))]),Text(v['arabic']??'',textDirection:ui.TextDirection.rtl,textAlign:TextAlign.right,style:const TextStyle(fontSize:27,height:1.8)),const Divider(),Text(v['translation']??'',style:const TextStyle(height:1.5))])));});}))]));}
 class AlQuranCloudService{static const api='https://api.alquran.cloud/v1';static const cdn='https://cdn.islamic.network';Future<dynamic> _get(String url)async{final r=await http.get(Uri.parse(url)).timeout(const Duration(seconds:20));if(r.statusCode!=200)throw Exception('Al Quran Cloud ${r.statusCode}');final j=jsonDecode(r.body);if(j['code']!=200)throw Exception(j['status']??'Kur’an servisi hatası');return j['data'];}Future<List<dynamic>> surahs()async=>List<dynamic>.from(await _get('$api/surah'));Future<List<Map<String,dynamic>>> verses(dynamic id)async{final a=await _get('$api/surah/$id/quran-uthmani');dynamic t;try{t=await _get('$api/surah/$id/tr.diyanet');}catch(_){t=await _get('$api/surah/$id/tr.yazir');}final aa=List<dynamic>.from(a['ayahs']),tt=List<dynamic>.from(t['ayahs']);return List.generate(aa.length,(i)=>{'globalNumber':aa[i]['number'],'numberInSurah':aa[i]['numberInSurah'],'arabic':aa[i]['text'],'translation':i<tt.length?tt[i]['text']:''});}String ayahAudio(int global,String edition,int bitrate)=>'$cdn/quran/audio/$bitrate/$edition/$global.mp3';String surahAudio(dynamic surah,String edition,int bitrate)=>'$cdn/quran/audio-surah/$bitrate/$edition/$surah.mp3';}
 
 class SalahBrandHeader extends StatelessWidget{const SalahBrandHeader({super.key});@override Widget build(BuildContext c)=>Row(children:[Container(width:38,height:38,decoration:BoxDecoration(color:brand,borderRadius:BorderRadius.circular(12)),child:const Icon(Icons.mosque,color:Colors.white,size:22)),const SizedBox(width:10),const Text('Salah',style:TextStyle(fontSize:24,fontWeight:FontWeight.w900,letterSpacing:-.6)),const Spacer(),Text('Prayer • Quran',style:Theme.of(c).textTheme.labelMedium)]);}
-
-class DonationScreen extends StatelessWidget {
-  const DonationScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Salah • Bağış'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const Icon(
-            Icons.volunteer_activism,
-            size: 72,
-            color: brand,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Salah’ı destekle',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Kur’an dinleme ve temel ibadet özellikleri bağış yapmadan '
-            'kullanılabilir. Bağışlar uygulamanın geliştirilmesi ve servis '
-            'giderleri için isteğe bağlı destek olarak sunulacaktır.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                children: [
-                  const ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.lock_outline),
-                    title: Text('Güvenli ödeme'),
-                    subtitle: Text(
-                      'Ödeme bilgileri Salah içinde saklanmayacak.',
-                    ),
-                  ),
-                  const Divider(),
-                  const ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.info_outline),
-                    title: Text('Ödeme sağlayıcısı bekleniyor'),
-                    subtitle: Text(
-                      'Google Play / App Store kurallarına uygun sağlayıcı '
-                      'seçildiğinde bu buton aktif edilecek.',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.favorite),
-                      label: const Text('Bağış sistemi yakında'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class HadithScreen extends StatelessWidget{const HadithScreen({super.key});@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Hadis')),body:ListView(padding:const EdgeInsets.all(18),children:const[InfoCard(icon:Icons.auto_stories,title:'Niyet',body:'Ameller niyetlere göredir. — Sahih Buhari, 1'),InfoCard(icon:Icons.favorite_outline,title:'Merhamet',body:'Merhamet etmeyene merhamet olunmaz. — Sahih Buhari / Sahih Müslim'),InfoCard(icon:Icons.handshake_outlined,title:'Kolaylık',body:'Kolaylaştırın, zorlaştırmayın. — Sahih Buhari / Sahih Müslim')]));}
 class TasbihScreen extends StatefulWidget{const TasbihScreen({super.key});@override State<TasbihScreen> createState()=>_TasbihScreenState();}class _TasbihScreenState extends State<TasbihScreen>{int n=0,target=33;@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Zikirmatik')),body:Padding(padding:const EdgeInsets.all(20),child:Column(children:[const SizedBox(height:30),Text('$n / $target',style:const TextStyle(fontSize:54,fontWeight:FontWeight.w300)),const SizedBox(height:12),LinearProgressIndicator(value:(n/target).clamp(0.0,1.0).toDouble()),const Spacer(),SizedBox(width:190,height:190,child:FilledButton(onPressed:()=>setState(()=>n++),style:FilledButton.styleFrom(shape:const CircleBorder()),child:const Icon(Icons.touch_app,size:62))),TextButton(onPressed:()=>setState(()=>n=0),child:const Text('Sıfırla')),const Spacer()]))) ;}
@@ -493,4 +417,4 @@ class DiscoverScreen extends StatelessWidget{final PrayerData d;const DiscoverSc
 class DuaScreen extends StatelessWidget{const DuaScreen({super.key});@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Dualar')),body:ListView(padding:const EdgeInsets.all(18),children:const[InfoCard(icon:Icons.wb_sunny_outlined,title:'Sabah',body:'Güne başlarken okunabilecek günlük dualar.'),InfoCard(icon:Icons.dark_mode_outlined,title:'Akşam',body:'Akşam ve uyku öncesi dua koleksiyonu.'),InfoCard(icon:Icons.restaurant_outlined,title:'Yemek',body:'Yemek öncesi ve sonrası dualar.')])) ;}
 
 class SettingsScreen extends StatefulWidget{final PrayerData d;final ValueChanged<ThemeMode> onTheme;const SettingsScreen({super.key,required this.d,required this.onTheme});@override State<SettingsScreen> createState()=>_SettingsScreenState();}
-class _SettingsScreenState extends State<SettingsScreen>{ThemeMode selected=ThemeMode.system;@override Widget build(BuildContext c)=>AnimatedBuilder(animation:widget.d,builder:(c,_)=>(ListView(padding:const EdgeInsets.all(20),children:[const SalahBrandHeader(),const SizedBox(height:14),const Text('Ayarlar',style:TextStyle(fontSize:28,fontWeight:FontWeight.w800)),const SizedBox(height:18),DropdownButtonFormField<int>(value:widget.d.method,decoration:const InputDecoration(labelText:'Hesaplama yöntemi',border:OutlineInputBorder()),items:widget.d.methods.entries.map((e)=>DropdownMenuItem(value:e.key,child:Text(e.value))).toList(),onChanged:(v){if(v!=null){widget.d.method=v;widget.d.load();}}),const SizedBox(height:14),Card(child:ListTile(leading:const Icon(Icons.location_on_outlined),title:Text(widget.d.city.isEmpty?'Konum':widget.d.city),subtitle:Text(widget.d.timezone),trailing:IconButton(onPressed:widget.d.load,icon:const Icon(Icons.refresh)))),const SizedBox(height:12),const SectionTitle('Bildirimler'),...widget.d.alerts.entries.map((e)=>SwitchListTile(title:Text(e.key),subtitle:const Text('Vakit geldiğinde bildir'),value:e.value,onChanged:(v)=>widget.d.setAlert(e.key,v))),const SizedBox(height:12),const SectionTitle('Görünüm'),const SizedBox(height:8),SegmentedButton<ThemeMode>(segments:const[ButtonSegment(value:ThemeMode.light,label:Text('Açık'),icon:Icon(Icons.light_mode)),ButtonSegment(value:ThemeMode.system,label:Text('Sistem'),icon:Icon(Icons.settings_brightness)),ButtonSegment(value:ThemeMode.dark,label:Text('Koyu'),icon:Icon(Icons.dark_mode))],selected:{selected},onSelectionChanged:(v){setState(()=>selected=v.first);widget.onTheme(v.first);}),const SizedBox(height:16),const Card(child:ListTile(leading:Icon(Icons.language),title:Text('Dil'),subtitle:Text('Türkçe • çoklu dil altyapısı V5 içinde genişletilebilir'))),const Card(child:ListTile(leading:Icon(Icons.headphones),title:Text('Sesli Kur’an'),subtitle:Text('Al Quran Cloud • API anahtarı gerektirmez • kâri seçimi desteklenir.')))])));}
+class _SettingsScreenState extends State<SettingsScreen>{ThemeMode selected=ThemeMode.system;@override Widget build(BuildContext c)=>AnimatedBuilder(animation:widget.d,builder:(c,_)=>(ListView(padding:const EdgeInsets.all(20),children:[const SalahBrandHeader(),const SizedBox(height:14),const Text('Ayarlar',style:TextStyle(fontSize:28,fontWeight:FontWeight.w800)),const SizedBox(height:18),DropdownButtonFormField<int>(value:widget.d.method,decoration:const InputDecoration(labelText:'Hesaplama yöntemi',border:OutlineInputBorder()),items:widget.d.methods.entries.map((e)=>DropdownMenuItem(value:e.key,child:Text(e.value))).toList(),onChanged:(v){if(v!=null){widget.d.method=v;widget.d.load();}}),const SizedBox(height:14),Card(child:ListTile(leading:const Icon(Icons.location_on_outlined),title:Text(widget.d.city.isEmpty?'Konum':widget.d.city),subtitle:Text(widget.d.timezone),trailing:IconButton(onPressed:widget.d.load,icon:const Icon(Icons.refresh)))),const SizedBox(height:12),const SectionTitle('Bildirimler'),...widget.d.alerts.entries.map((e)=>SwitchListTile(title:Text(e.key),subtitle:const Text('Vakit geldiğinde bildir'),value:e.value,onChanged:(v)=>widget.d.setAlert(e.key,v))),const SizedBox(height:12),const SectionTitle('Görünüm'),const SizedBox(height:8),SegmentedButton<ThemeMode>(segments:const[ButtonSegment(value:ThemeMode.light,label:Text('Açık'),icon:Icon(Icons.light_mode)),ButtonSegment(value:ThemeMode.system,label:Text('Sistem'),icon:Icon(Icons.settings_brightness)),ButtonSegment(value:ThemeMode.dark,label:Text('Koyu'),icon:Icon(Icons.dark_mode))],selected:{selected},onSelectionChanged:(v){setState(()=>selected=v.first);widget.onTheme(v.first);}),const SizedBox(height:16),const Card(child:ListTile(leading:Icon(Icons.language),title:Text('Dil'),subtitle:Text('Türkçe • çoklu dil desteği')))])));}
