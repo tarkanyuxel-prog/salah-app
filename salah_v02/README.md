@@ -9,6 +9,7 @@ Global Islamic companion app built with Flutter.
 - Qur'an Arabic text, Turkish translation and audio
 - Multiple reciters
 - Hadith and dua sections
+- Islamic knowledge quiz: 5,820 sourced questions, 10 questions per round, progressive difficulty
 - Dhikr counter
 - Prayer notifications
 - Light / dark themes
