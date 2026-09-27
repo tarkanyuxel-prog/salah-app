@@ -4,7 +4,6 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.widget.RemoteViews
-import java.time.LocalDate
 
 class DailyIslamicWidget : AppWidgetProvider() {
     private val hadiths = listOf(
@@ -26,7 +25,7 @@ class DailyIslamicWidget : AppWidgetProvider() {
         val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         val showHadith = prefs.getBoolean("flutter.hadith_widget", true)
         val showDua = prefs.getBoolean("flutter.dua_widget", true)
-        val day = LocalDate.now().toEpochDay().toInt()
+        val day = (System.currentTimeMillis() / 86_400_000L).toInt()
         ids.forEach { id ->
             val views = RemoteViews(context.packageName, R.layout.daily_islamic_widget)
             val parts = mutableListOf<String>()
