@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'language_service.dart';
 
 const quizBrand = Color(0xFF0B6B5C);
 
@@ -49,16 +50,16 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>{
   Future<void> _result()async{final next=await showDialog<bool>(context:context,barrierDismissible:false,builder:(c)=>AlertDialog(title:const Text('Tur tamamlandı'),content:Text('10 soruda '+score.toString()+' doğru.\\n\\nSonraki turda zorluk kademeli olarak artar.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Çık')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Sonraki tur'))]));if(!mounted)return;if(next==true){roundNo++;_startRound();}else{Navigator.pop(context);}}
   @override Widget build(BuildContext context){
     if(loading)return const Scaffold(body:Center(child:CircularProgressIndicator()));
-    if(error!=null||questions.isEmpty)return Scaffold(appBar:AppBar(title:const Text('İslami Bilgi Yarışması')),body:Center(child:Padding(padding:const EdgeInsets.all(24),child:Column(mainAxisSize:MainAxisSize.min,children:[const Icon(Icons.cloud_off,size:48),const SizedBox(height:12),Text(error??'Soru bulunamadı',textAlign:TextAlign.center),const SizedBox(height:12),FilledButton(onPressed:(){setState((){loading=true;error=null;});_load();},child:const Text('Tekrar dene'))]))));
+    if(error!=null||questions.isEmpty)return Scaffold(appBar:AppBar(title:Text('İslami Bilgi Yarışması • '+AppLanguage.supported[appLanguage.code]!)),body:Center(child:Padding(padding:const EdgeInsets.all(24),child:Column(mainAxisSize:MainAxisSize.min,children:[const Icon(Icons.cloud_off,size:48),const SizedBox(height:12),Text(error??'Soru bulunamadı',textAlign:TextAlign.center),const SizedBox(height:12),FilledButton(onPressed:(){setState((){loading=true;error=null;});_load();},child:const Text('Tekrar dene'))]))));
     final q=questions[index];
-    return Scaffold(appBar:AppBar(title:const Text('İslami Bilgi Yarışması')),body:ListView(padding:const EdgeInsets.all(20),children:[
+    return Scaffold(appBar:AppBar(title:Text('İslami Bilgi Yarışması • '+AppLanguage.supported[appLanguage.code]!)),body:ListView(padding:const EdgeInsets.all(20),children:[
       Row(children:[Text('Tur '+roundNo.toString(),style:const TextStyle(fontWeight:FontWeight.w800)),const Spacer(),Text((index+1).toString()+'/10 • '+score.toString()+' puan')]),
       const SizedBox(height:10),LinearProgressIndicator(value:(index+1)/10),const SizedBox(height:24),
       Text('Seviye '+q.level.toString(),style:const TextStyle(color:quizBrand,fontWeight:FontWeight.w700)),const SizedBox(height:8),
       Text(q.question,textDirection:TextDirection.rtl,textAlign:TextAlign.right,style:const TextStyle(fontSize:23,height:1.5,fontWeight:FontWeight.w700)),const SizedBox(height:20),
       ...List.generate(q.answers.length,(i){final a=q.answers[i],correct=a['t']==1;Color? bg;if(answered&&correct)bg=Colors.green.withOpacity(.15);if(answered&&selected==i&&!correct)bg=Colors.red.withOpacity(.15);return Card(color:bg,child:ListTile(onTap:()=>_answer(i),title:Text((a['answer']??'').toString(),textDirection:TextDirection.rtl,textAlign:TextAlign.right),trailing:answered&&correct?const Icon(Icons.check_circle,color:Colors.green):null));}),
       if(answered)...[const SizedBox(height:14),FilledButton(onPressed:_next,child:Text(index==9?'Turu bitir':'Sonraki soru'))],
-      const SizedBox(height:18),Text('5.820 soruluk IslamicQuizAPI veri bankası • Kaynaklar: Dorar',style:Theme.of(context).textTheme.bodySmall,textAlign:TextAlign.center),
+      const SizedBox(height:18),Text('Sorular kaynak dilinde gösterilir • Uygulama dili: '+AppLanguage.supported[appLanguage.code]!+' • 5.820 soruluk IslamicQuizAPI • Dorar',style:Theme.of(context).textTheme.bodySmall,textAlign:TextAlign.center),
     ]));
   }
 }
