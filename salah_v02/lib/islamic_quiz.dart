@@ -17,7 +17,7 @@ class QuizQuestion {
     question:(j['q']??'').toString(),
     level:(j['level'] as num?)?.toInt()??1,
     source:(j['link']??'').toString(),
-    answers:List<Map<String,dynamic>>.from((j['answers'] as List???const[]).map((e)=>Map<String,dynamic>.from(e as Map))),
+    answers:List<Map<String,dynamic>>.from((j['answers'] as List? ?? const[]).map((e)=>Map<String,dynamic>.from(e as Map))),
   );
 }
 class IslamicQuizService {
