@@ -14,6 +14,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'update_service.dart';
 
 const brand = Color(0xFF0B6B5C);
 const gold = Color(0xFFE4B34A);
@@ -57,7 +58,7 @@ class PrayerData extends ChangeNotifier {
 }
 
 class AppShell extends StatefulWidget {final ValueChanged<ThemeMode> onTheme;const AppShell({super.key,required this.onTheme});@override State<AppShell> createState()=>_AppShellState();}
-class _AppShellState extends State<AppShell>{int index=0;final data=PrayerData();@override void initState(){super.initState();data.restore().then((_)=>data.load());}@override void dispose(){data.dispose();super.dispose();}
+class _AppShellState extends State<AppShell>{int index=0;final data=PrayerData();@override void initState(){super.initState();data.restore().then((_)=>data.load());WidgetsBinding.instance.addPostFrameCallback((_) {if(mounted) AppUpdater.check(context);});}@override void dispose(){data.dispose();super.dispose();}
  @override Widget build(BuildContext context){final pages=[HomeScreen(onOpen:(i)=>setState(()=>index=i),d:data),TimesScreen(d:data),QuranScreen(),DiscoverScreen(d:data),SettingsScreen(d:data,onTheme:widget.onTheme)];return Scaffold(body:SafeArea(child:IndexedStack(index:index,children:pages)),bottomNavigationBar:NavigationBar(selectedIndex:index,onDestinationSelected:(v)=>setState(()=>index=v),destinations:const[NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'Ana Sayfa'),NavigationDestination(icon:Icon(Icons.schedule_outlined),label:'Vakitler'),NavigationDestination(icon:Icon(Icons.menu_book_outlined),label:'Kur’an'),NavigationDestination(icon:Icon(Icons.grid_view_rounded),label:'Keşfet'),NavigationDestination(icon:Icon(Icons.settings_outlined),label:'Ayarlar')]));}}
 
 class HomeScreen extends StatefulWidget {
