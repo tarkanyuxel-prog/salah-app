@@ -1,18 +1,27 @@
-# Salah v0.2
+# Salah v0.3
 
-Modern Flutter prayer application.
+Global Islamic companion app built with Flutter.
 
-Included modules:
-- Prayer times and countdown (AlAdhan)
-- Ramadan imsak/iftar calendar
+## v0.3
+- Prayer times and countdown via AlAdhan
+- Ramadan imsak / iftar calendar
 - Qibla compass
-- Quran Arabic text and Turkish translation
-- Quran audio via Al Quran Cloud (no client secret)
+- Qur'an Arabic text, Turkish translation and audio
 - Multiple reciters
-- Dhikr counter, hadith, duas
+- Hadith and dua sections
+- Dhikr counter
 - Prayer notifications
-- Light/dark themes
-- Donation UI placeholder
-- Salah v0.2 visual design reference in assets/images
+- Light / dark themes
+- GitHub Releases based in-app Android update check
+- Donation UI removed
+- Settings audio-Qur'an shortcut removed
 
-Version: 0.2.0+2
+## Android update channel
+The app checks the latest public GitHub Release on startup. When a newer release contains an APK asset, Salah offers the update and opens the Android package installer after download.
+
+For an Android upgrade to install over the existing app:
+- Keep the same applicationId / package name.
+- Sign every release APK with the same signing certificate.
+- Increase the Flutter build number (Android versionCode).
+
+Version: 0.3.0+3
