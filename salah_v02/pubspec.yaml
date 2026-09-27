@@ -24,6 +24,14 @@ dependencies:
   package_info_plus: ^8.0.2
   open_filex: ^4.5.0
   path_provider: ^2.1.4
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/kaaba_icon.png"
+  adaptive_icon_background: "#0B6B5C"
+  adaptive_icon_foreground: "assets/images/kaaba_icon.png"
 
 flutter:
   uses-material-design: true
