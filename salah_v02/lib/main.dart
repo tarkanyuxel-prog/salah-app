@@ -45,8 +45,8 @@ class _SalahAppState extends State<SalahApp> {
   ThemeMode mode=ThemeMode.system;
   @override Widget build(BuildContext context)=>AnimatedBuilder(animation:appLanguage,builder:(context,_)=>MaterialApp(
     debugShowCheckedModeBanner:false,title:'Salah',themeMode:mode,
-    theme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.light,surface:softSurface),scaffoldBackgroundColor:softSurface,navigationBarTheme:const NavigationBarThemeData(backgroundColor:softNav,indicatorColor:Color(0xFFD6E4DE),elevation:0),cardTheme:CardThemeData(color:const Color(0xFFFBFCFB),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
-    darkTheme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.dark,surface:const Color(0xFF13201D)),scaffoldBackgroundColor:const Color(0xFF101A18),navigationBarTheme:const NavigationBarThemeData(backgroundColor:Color(0xFF172521),indicatorColor:Color(0xFF294039),elevation:0),cardTheme:CardThemeData(color:const Color(0xFF172521),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
+    theme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.light),scaffoldBackgroundColor:softSurface,navigationBarTheme:const NavigationBarThemeData(backgroundColor:softNav,indicatorColor:Color(0xFFD6E4DE),elevation:0),cardTheme:CardThemeData(color:const Color(0xFFFBFCFB),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
+    darkTheme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.dark),scaffoldBackgroundColor:const Color(0xFF101A18),navigationBarTheme:const NavigationBarThemeData(backgroundColor:Color(0xFF172521),indicatorColor:Color(0xFF294039),elevation:0),cardTheme:CardThemeData(color:const Color(0xFF172521),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
     home:AppShell(onTheme:(v)=>setState(()=>mode=v)),
   ));
 }
