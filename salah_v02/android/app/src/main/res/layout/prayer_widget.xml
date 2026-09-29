@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+    <TextView android:id="@+id/widget_city" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Salah" android:textColor="#4E625C" android:textSize="12sp" android:maxLines="1"/>
+    <TextView android:id="@+id/widget_next_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Sonraki Namaz" android:textColor="#173C34" android:textStyle="bold" android:textSize="15sp"/>
+    <TextView android:id="@+id/widget_next_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="--:--" android:textColor="#173C34" android:textStyle="bold" android:textSize="30sp"/>
+    <TextView android:id="@+id/widget_remaining" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textColor="#8A7041" android:textSize="12sp"/>
+    <TextView android:id="@+id/widget_times" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="" android:textColor="#60736E" android:textSize="10sp" android:maxLines="2"/>
+</LinearLayout>
