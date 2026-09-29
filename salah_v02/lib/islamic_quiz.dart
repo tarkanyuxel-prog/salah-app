@@ -55,7 +55,7 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>{
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{try{all=await service.loadAll();_startRound();await _translateCurrent();}catch(e){if(mounted)setState((){error=e.toString();loading=false;});}}
   void _startRound(){questions=service.round(all,roundNo);index=0;score=0;selected=null;answered=false;if(mounted)setState(()=>loading=false);}
-  Future<void> _translateCurrent()async{if(questions.isEmpty)return;final q=questions[index];final tq=await TranslationService.translate(q.question,from:'ar',to:appLanguage.code);final ta=<String>[];for(final a in q.answers){ta.add(await TranslationService.translate((a['answer']??'').toString(),from:'ar',to:appLanguage.code));}if(mounted)setState((){translatedQuestion=tq;translatedAnswers=ta;});}
+  Future<void> _translateCurrent()async{if(questions.isEmpty)return;final q=questions[index];final target=appLanguage.code=='ar'?'tr':appLanguage.code;final tq=await TranslationService.translate(q.question,from:'ar',to:target);final ta=<String>[];for(final a in q.answers){ta.add(await TranslationService.translate((a['answer']??'').toString(),from:'ar',to:target));}if(mounted)setState((){translatedQuestion=tq;translatedAnswers=ta;});}
   void _answer(int i){if(answered)return;final ok=questions[index].answers[i]['t']==1;setState((){selected=i;answered=true;if(ok)score++;});}
   void _next(){if(index+1>=questions.length){_result();return;}setState((){index++;selected=null;answered=false;translatedQuestion='';translatedAnswers=const[];});_translateCurrent();}
   Future<void> _result()async{final next=await showDialog<bool>(context:context,barrierDismissible:false,builder:(c)=>AlertDialog(title:const Text('Tur tamamlandı'),content:Text('10 soruda '+score.toString()+' doğru.\\n\\nSonraki turda zorluk kademeli olarak artar.'),actions:[TextButton(onPressed:()=>Navigator.pop(c,false),child:const Text('Çık')),FilledButton(onPressed:()=>Navigator.pop(c,true),child:const Text('Sonraki tur'))]));if(!mounted)return;if(next==true){roundNo++;_startRound();}else{Navigator.pop(context);}}
@@ -67,10 +67,19 @@ class _IslamicQuizScreenState extends State<IslamicQuizScreen>{
       Row(children:[Text('Tur '+roundNo.toString(),style:const TextStyle(fontWeight:FontWeight.w800)),const Spacer(),Text((index+1).toString()+'/10 • '+score.toString()+' puan')]),
       const SizedBox(height:10),LinearProgressIndicator(value:(index+1)/10),const SizedBox(height:24),
       Text('Seviye '+q.level.toString(),style:const TextStyle(color:quizBrand,fontWeight:FontWeight.w700)),const SizedBox(height:8),
-      Text(q.question,textDirection:TextDirection.rtl,textAlign:TextAlign.right,style:const TextStyle(fontSize:23,height:1.5,fontWeight:FontWeight.w700)),if(translatedQuestion.isNotEmpty&&translatedQuestion!=q.question)...[const SizedBox(height:10),Text(translatedQuestion,style:const TextStyle(fontSize:17,height:1.45))],const SizedBox(height:20),
-      ...List.generate(q.answers.length,(i){final a=q.answers[i],correct=a['t']==1;Color? bg;if(answered&&correct)bg=Colors.green.withOpacity(.15);if(answered&&selected==i&&!correct)bg=Colors.red.withOpacity(.15);return Card(color:bg,child:ListTile(onTap:()=>_answer(i),title:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[Text((a['answer']??'').toString(),textDirection:TextDirection.rtl,textAlign:TextAlign.right),if(i<translatedAnswers.length&&translatedAnswers[i]!=(a['answer']??'').toString())Text(translatedAnswers[i],style:const TextStyle(fontSize:13))]),trailing:answered&&correct?const Icon(Icons.check_circle,color:Colors.green):null));}),
+      Container(
+        padding:const EdgeInsets.all(18),
+        decoration:BoxDecoration(color:quizBrand.withOpacity(.06),borderRadius:BorderRadius.circular(22),border:Border.all(color:quizBrand.withOpacity(.12))),
+        child:Stack(children:[
+          Positioned.fill(child:Align(alignment:Alignment.topRight,child:Opacity(opacity:.09,child:Text(q.question,maxLines:4,overflow:TextOverflow.fade,textDirection:TextDirection.rtl,textAlign:TextAlign.right,style:const TextStyle(fontSize:27,height:1.45,fontWeight:FontWeight.w800))))),
+          Padding(padding:const EdgeInsets.symmetric(vertical:16),child:Text(translatedQuestion.isEmpty?'Çeviri hazırlanıyor…':translatedQuestion,style:const TextStyle(fontSize:21,height:1.45,fontWeight:FontWeight.w800))),
+        ]),
+      ),
+      const SizedBox(height:8),Text('Kaynak metin: Arapça • Gösterim: '+(appLanguage.code=='ar'?'Türkçe':AppLanguage.supported[appLanguage.code]!),style:Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height:20),
+      ...List.generate(q.answers.length,(i){final a=q.answers[i],correct=a['t']==1;Color? bg;if(answered&&correct)bg=Colors.green.withOpacity(.12);if(answered&&selected==i&&!correct)bg=Colors.red.withOpacity(.12);final translated=i<translatedAnswers.length?translatedAnswers[i]:'';return Card(color:bg,margin:const EdgeInsets.only(bottom:10),child:ListTile(contentPadding:const EdgeInsets.symmetric(horizontal:16,vertical:8),onTap:()=>_answer(i),leading:CircleAvatar(backgroundColor:quizBrand.withOpacity(.10),child:Text(String.fromCharCode(65+i),style:const TextStyle(color:quizBrand,fontWeight:FontWeight.w900))),title:Text(translated.isEmpty?'Çeviri hazırlanıyor…':translated,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w700)),subtitle:Opacity(opacity:.38,child:Text((a['answer']??'').toString(),maxLines:1,overflow:TextOverflow.ellipsis,textDirection:TextDirection.rtl,textAlign:TextAlign.right)),trailing:answered&&correct?const Icon(Icons.check_circle,color:Colors.green):null));}),
       if(answered)...[const SizedBox(height:14),FilledButton(onPressed:_next,child:Text(index==9?'Turu bitir':'Sonraki soru'))],
-      const SizedBox(height:18),Text('Sorular kaynak dilinde gösterilir • Uygulama dili: '+AppLanguage.supported[appLanguage.code]!+' • 5.820 soruluk IslamicQuizAPI • Dorar',style:Theme.of(context).textTheme.bodySmall,textAlign:TextAlign.center),
+      const SizedBox(height:18),Text('Arapça kaynak korunur • Soru ve cevaplar seçili dilde öne çıkar • 5.820 soruluk IslamicQuizAPI • Dorar',style:Theme.of(context).textTheme.bodySmall,textAlign:TextAlign.center),
     ]));
   }
 }
