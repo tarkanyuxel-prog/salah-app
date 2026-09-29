@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -21,8 +22,10 @@ import 'language_service.dart';
 import 'islamic_content_service.dart';
 import 'translation_service.dart';
 
-const brand = Color(0xFF0B6B5C);
-const gold = Color(0xFFE4B34A);
+const brand = Color(0xFF496E64);
+const gold = Color(0xFFC6A66A);
+const softSurface = Color(0xFFF5F7F5);
+const softNav = Color(0xFFEAF0ED);
 final notifications = FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
@@ -42,8 +45,8 @@ class _SalahAppState extends State<SalahApp> {
   ThemeMode mode=ThemeMode.system;
   @override Widget build(BuildContext context)=>AnimatedBuilder(animation:appLanguage,builder:(context,_)=>MaterialApp(
     debugShowCheckedModeBanner:false,title:'Salah',themeMode:mode,
-    theme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.light),scaffoldBackgroundColor:const Color(0xFFF4F7F5),cardTheme:CardThemeData(elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
-    darkTheme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.dark),scaffoldBackgroundColor:const Color(0xFF081714),cardTheme:CardThemeData(elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
+    theme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.light,surface:softSurface),scaffoldBackgroundColor:softSurface,navigationBarTheme:const NavigationBarThemeData(backgroundColor:softNav,indicatorColor:Color(0xFFD6E4DE),elevation:0),cardTheme:CardThemeData(color:const Color(0xFFFBFCFB),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
+    darkTheme:ThemeData(useMaterial3:true,colorScheme:ColorScheme.fromSeed(seedColor:brand,brightness:Brightness.dark,surface:const Color(0xFF13201D)),scaffoldBackgroundColor:const Color(0xFF101A18),navigationBarTheme:const NavigationBarThemeData(backgroundColor:Color(0xFF172521),indicatorColor:Color(0xFF294039),elevation:0),cardTheme:CardThemeData(color:const Color(0xFF172521),elevation:0,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(22)))),
     home:AppShell(onTheme:(v)=>setState(()=>mode=v)),
   ));
 }
@@ -55,8 +58,30 @@ class PrayerData extends ChangeNotifier {
   String clean(dynamic v)=>v.toString().split(' ').first;
   Future<Position> getPosition() async { if(!await Geolocator.isLocationServiceEnabled()) throw Exception('Konum servisini açın.'); var p=await Geolocator.checkPermission(); if(p==LocationPermission.denied)p=await Geolocator.requestPermission(); if(p==LocationPermission.denied||p==LocationPermission.deniedForever)throw Exception('Konum izni gerekli.'); return Geolocator.getCurrentPosition(); }
   Future<void> restore() async {final p=await SharedPreferences.getInstance();method=p.getInt('method')??13;for(final k in alerts.keys.toList()){alerts[k]=p.getBool('alert_$k')??true;}notifyListeners();}
-  Future<void> load() async {loading=true;status='Vakitler alınıyor...';notifyListeners();try{position=await getPosition();try{final ps=await placemarkFromCoordinates(position!.latitude,position!.longitude);if(ps.isNotEmpty)city=[ps.first.locality,ps.first.administrativeArea,ps.first.country].whereType<String>().where((e)=>e.isNotEmpty).toSet().join(', ');}catch(_){}final ts=DateTime.now().millisecondsSinceEpoch~/1000;final uri=Uri.https('api.aladhan.com','/v1/timings/$ts',{'latitude':'${position!.latitude}','longitude':'${position!.longitude}','method':'$method'});final r=await http.get(uri).timeout(const Duration(seconds:15));if(r.statusCode!=200)throw Exception('Sunucu hatası (${r.statusCode})');final j=jsonDecode(r.body),d=j['data'],t=d['timings'];timings={'İmsak':clean(t['Fajr']),'Güneş':clean(t['Sunrise']),'Öğle':clean(t['Dhuhr']),'İkindi':clean(t['Asr']),'Akşam':clean(t['Maghrib']),'Yatsı':clean(t['Isha'])};hijri='${d['date']['hijri']['day']} ${d['date']['hijri']['month']['en']} ${d['date']['hijri']['year']}';timezone=d['meta']['timezone']??'';status='Güncel';await _save();await scheduleAlerts();}catch(e){status=e.toString().replaceFirst('Exception: ','');}loading=false;notifyListeners();}
+  Future<void> load() async {loading=true;status='Vakitler alınıyor...';notifyListeners();try{position=await getPosition();try{final ps=await placemarkFromCoordinates(position!.latitude,position!.longitude);if(ps.isNotEmpty)city=[ps.first.locality,ps.first.administrativeArea,ps.first.country].whereType<String>().where((e)=>e.isNotEmpty).toSet().join(', ');}catch(_){}final ts=DateTime.now().millisecondsSinceEpoch~/1000;final uri=Uri.https('api.aladhan.com','/v1/timings/$ts',{'latitude':'${position!.latitude}','longitude':'${position!.longitude}','method':'$method'});final r=await http.get(uri).timeout(const Duration(seconds:15));if(r.statusCode!=200)throw Exception('Sunucu hatası (${r.statusCode})');final j=jsonDecode(r.body),d=j['data'],t=d['timings'];timings={'İmsak':clean(t['Fajr']),'Güneş':clean(t['Sunrise']),'Öğle':clean(t['Dhuhr']),'İkindi':clean(t['Asr']),'Akşam':clean(t['Maghrib']),'Yatsı':clean(t['Isha'])};hijri='${d['date']['hijri']['day']} ${d['date']['hijri']['month']['en']} ${d['date']['hijri']['year']}';timezone=d['meta']['timezone']??'';status='Güncel';await _save();await scheduleAlerts();await updateHomeWidget();}catch(e){status=e.toString().replaceFirst('Exception: ','');}loading=false;notifyListeners();}
   Future<List<Map<String,dynamic>>> ramadanCalendar() async {if(position==null)await load();if(position==null)return[];final now=DateTime.now();final uri=Uri.https('api.aladhan.com','/v1/calendar/${now.year}/${now.month}',{'latitude':'${position!.latitude}','longitude':'${position!.longitude}','method':'$method'});final r=await http.get(uri).timeout(const Duration(seconds:15));if(r.statusCode!=200)throw Exception('Ramazan takvimi alınamadı');final List raw=jsonDecode(r.body)['data'];return raw.map<Map<String,dynamic>>((x)=>{'date':x['date']['gregorian']['date'],'hijriDay':x['date']['hijri']['day'],'hijriMonth':x['date']['hijri']['month']['en'],'fajr':clean(x['timings']['Fajr']),'maghrib':clean(x['timings']['Maghrib'])}).toList();}
+  Future<void> updateHomeWidget() async {
+    if (timings.isEmpty) return;
+    final now=DateTime.now();
+    MapEntry<String,String>? next;
+    for(final e in timings.entries){
+      if(e.key=='Güneş') continue;
+      final p=e.value.split(':');
+      final t=DateTime(now.year,now.month,now.day,int.parse(p[0]),int.parse(p[1]));
+      if(t.isAfter(now)){next=e;break;}
+    }
+    next ??= MapEntry('İmsak',timings['İmsak']??'--:--');
+    final compact=timings.entries.map((e)=>'${e.key} ${e.value}').join('  •  ');
+    try{
+      const channel=MethodChannel('com.salah.app/prayer_widget');
+      await channel.invokeMethod('updatePrayerWidget',{
+        'city':city.isEmpty?'Salah':city,
+        'nextName':next.key,
+        'nextTime':next.value,
+        'times':compact,
+      });
+    }catch(_){}
+  }
   Future<void> _save()async{final p=await SharedPreferences.getInstance();await p.setInt('method',method);for(final e in alerts.entries){await p.setBool('alert_${e.key}',e.value);}}
   Future<void> setAlert(String k,bool v)async{alerts[k]=v;await _save();await scheduleAlerts();notifyListeners();}
   Future<void> scheduleAlerts()async{await notifications.cancelAll();if(timings.isEmpty)return;final android=notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();await android?.requestNotificationsPermission();var id=10;for(final e in timings.entries){if(e.key=='Güneş'||alerts[e.key]!=true)continue;final x=e.value.split(':');var when=DateTime.now();when=DateTime(when.year,when.month,when.day,int.parse(x[0]),int.parse(x[1]));if(!when.isAfter(DateTime.now()))continue;await notifications.zonedSchedule(id++,'${e.key} vakti','${e.key} vakti geldi.',tz.TZDateTime.from(when,tz.local),const NotificationDetails(android:AndroidNotificationDetails('prayer_times','Namaz Vakitleri',importance:Importance.high,priority:Priority.high),iOS:DarwinNotificationDetails()),androidScheduleMode:AndroidScheduleMode.inexactAllowWhileIdle,uiLocalNotificationDateInterpretation:UILocalNotificationDateInterpretation.absoluteTime);}}
